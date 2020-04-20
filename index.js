@@ -166,6 +166,8 @@ function mockServiceMethod(service, client, method, replace) {
       createReadStream: function() {
         if (replace instanceof Readable) {
           return replace;
+        } else if (storedResult instanceof Readable) {
+          return storedResult;
         } else {
           const stream = new Readable();
           stream._read = function(size) {
@@ -204,7 +206,7 @@ function mockServiceMethod(service, client, method, replace) {
     if (typeof replace === 'function') {
       const result = replace.apply(replace, userArgs.concat([callback]));
       if (storedResult === undefined && result != null &&
-          typeof result.then === 'function') {
+          typeof result.then === 'function' || result instanceof Readable) {
         storedResult = result
       }
     }

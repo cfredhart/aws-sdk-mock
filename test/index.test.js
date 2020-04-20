@@ -265,13 +265,23 @@ test('AWS.mock function should mock AWS service and method on the service', func
       st.end();
     }));
   });
-  t.test('request object createReadStream ignores functions', function(st) {
+  t.test('request object createReadStream ignores functions that dont return Readables', function(st) {
     awsMock.mock('S3', 'getObject', function(){});
     const s3 = new AWS.S3();
     const req = s3.getObject('getObject', {});
     const stream = req.createReadStream();
     stream.pipe(concatStream(function(actual) {
       st.equals(actual.toString(), '');
+      st.end();
+    }));
+  });
+  t.test('request object createReadStream works with functions that return Readables', function(st) {
+    awsMock.mock('S3', 'getObject', function() {return new Readable({read(size) {this.push('body'); this.push(null)}})});
+    const s3 = new AWS.S3();
+    const req = s3.getObject('getObject', {});
+    const stream = req.createReadStream();
+    stream.pipe(concatStream(function(actual) {
+      st.equals(actual.toString(), 'body');
       st.end();
     }));
   });
